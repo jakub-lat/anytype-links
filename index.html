@@ -26,6 +26,7 @@
             border-radius: 10px;
             border: 1px solid #ccc;
             color: black;
+            background-color: #eeeeee;
         }
 
         input:focus {
@@ -33,16 +34,23 @@
             border-color: auto;
         }
 
+        label {
+            font-size: 0.8em;
+            display: block;
+            margin-bottom: 5px;
+            opacity: 0.8
+        }
+
         button {
-            width: 300px;
-            padding: 8px 10px;
+            width: 100px;
+            padding: 10px 10px;
             border-radius: 10px;
             color: black;
             border: none;
             cursor: pointer;
             transition: all 0.1s;
             background-color: #eee;
-            margin-top: 10px;
+            justify-self: end;
         }
 
         button:hover {
@@ -51,23 +59,27 @@
 
         .content {
             width: 500px;
-            height: 350px;
+            max-width: 90vw;
+            height: 450px;
             background-color: #333;
             border-radius: 10px;
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding: 40px 20px;
+            padding: 40px 50px;
             box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .space {
+            flex-grow: 1;
         }
 
         form {
             width: 100%;
-            padding: 0 50px;
+            flex-grow: 1;
             display: flex;
             flex-direction: column;
-            row-gap: 10px;
-            margin-bottom: 20px;    
+            row-gap: 15px;
         }
 
         form * {
@@ -78,17 +90,34 @@
             margin-top: 0;
             margin-bottom: 30px;
         }
+
+        #info {
+            height: 0.9em;
+            margin-top: 15px;
+            font-size: 0.9em;
+        }
     </style>
 </head>
 <body>
     <div class="content">
         <h1>Anytype links</h1>
         <form id="form">
-            <input type="text" id="url" placeholder="Enter anytype URL">
-            <select name="mode" id="mode">
-                <option value="url">URL</option>
-                <option value="markdown">Markdown</option>
-            </select>
+            <div class="input-group">
+                <label for="url">Anytype URL</label>
+                <input type="text" id="url" placeholder="Enter Anytype URL">
+            </div>
+            <div class="input-group">
+                <label for="mode">Mode</label>
+                <select name="mode" id="mode">
+                    <option value="url">URL</option>
+                    <option value="markdown">Markdown</option>
+                </select>
+            </div>
+            <div class="input-group" id="title-group">
+                <label for="title">Link title</label>
+                <input type="text" id="title" value="Anytype link" placeholder="Link title">
+            </div>
+            <div class="space"></div>
             <button type="submit">Shorten</button>
         </form>
         <div id="info">
@@ -100,18 +129,35 @@
         const infoBox = document.querySelector('#info');
         const form = document.querySelector('#form');
         const urlInput = document.querySelector('#url');
+        const titleInput = document.querySelector('#title');
+        const titleGroup = document.querySelector('#title-group');
         const modeDropdown = document.querySelector('#mode');
 
-        const query = new URLSearchParams(window.location.search);
-        const urlRaw = query.get('url');
-        if (urlRaw) {
-            const url = atob(urlRaw);
-            window.open(url);
+        function isWindowClosed(win) {
+            return !win || win.closed || typeof win.closed === 'undefined';
         }
 
-        const lastMode = localStorage.getItem('mode');
-        if (lastMode) {
-            modeDropdown.value = lastMode;
+        function tryRedirect() {
+            const query = new URLSearchParams(window.location.search);
+            const urlRaw = query.get('url');
+
+            if (!urlRaw) return;
+
+            form.style.display = 'none';
+
+            const url = atob(urlRaw);
+            const newWindow = window.open(url);
+
+            if (isWindowClosed(newWindow)) { 
+                showInfo('Popup blocked!');
+                return;    
+            }
+
+            showInfo('Redirecting...');
+            
+            setTimeout(() => {
+                window.close();
+            }, 1000);
         }
 
         let lastTimeout;
@@ -136,7 +182,6 @@
             const urlEncoded = btoa(url);
             let result = `${location.protocol}//${location.host}${location.pathname}?url=${urlEncoded}`;
 
-            localStorage.setItem('mode', mode);
             if (mode === 'markdown') {
                 result = `[Anytype](${result})`;
             }
@@ -145,7 +190,23 @@
             showInfo('Copied to clipboard!');
         }
 
+        function onModeDropdownChange() {
+            const value = modeDropdown.value;
+            localStorage.setItem('mode', value);
+            titleGroup.style.visibility = value === 'markdown' ? 'visible' : 'hidden';
+        }
+
+        const lastMode = localStorage.getItem('mode');
+        if (lastMode) {
+            modeDropdown.value = lastMode;
+        }
+
+        modeDropdown.addEventListener('change', onModeDropdownChange);
+        onModeDropdownChange();
+
         form.addEventListener('submit', submit);
+
+        tryRedirect();
     </script>
 </body>
 </html>
