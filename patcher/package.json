@@ -1,0 +1,17 @@
+{
+  "name": "patcher",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "patch" : "node index.js patch",
+    "unpatch" : "node index.js unpatch"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@electron/asar": "^3.2.10",
+    "commander": "^12.1.0"
+  }
+}
