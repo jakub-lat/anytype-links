@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Anytype links</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css" integrity="sha512-NhSC1YmyruXifcj/KFRWoC561YpHpc5Jtzgvbuzx5VozKpWvQ+4nXhPdFgmx8xqexRcpAglTj9sIBWINXa8x5w==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: Arial;
+        }
+
+        body {
+            background: #1c1c1c;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+        }
+
+        input, select {
+            width: 300px;
+            padding: 8px 10px;
+            border-radius: 10px;
+            border: 1px solid #ccc;
+            color: black;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: auto;
+        }
+
+        button {
+            width: 300px;
+            padding: 8px 10px;
+            border-radius: 10px;
+            color: black;
+            border: none;
+            cursor: pointer;
+            transition: all 0.1s;
+            background-color: #eee;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            background-color: #ccc;
+        }
+
+        .content {
+            width: 500px;
+            height: 350px;
+            background-color: #333;
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 40px 20px;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+        }
+
+        form {
+            width: 100%;
+            padding: 0 50px;
+            display: flex;
+            flex-direction: column;
+            row-gap: 10px;
+            margin-bottom: 20px;    
+        }
+
+        form * {
+            width: 100%;
+        }
+
+        h1 {
+            margin-top: 0;
+            margin-bottom: 30px;
+        }
+    </style>
+</head>
+<body>
+    <div class="content">
+        <h1>Anytype links</h1>
+        <form id="form">
+            <input type="text" id="url" placeholder="Enter anytype URL">
+            <select name="mode" id="mode">
+                <option value="url">URL</option>
+                <option value="markdown">Markdown</option>
+            </select>
+            <button type="submit">Shorten</button>
+        </form>
+        <div id="info">
+
+        </div>
+    </div>
+
+    <script>
+        const infoBox = document.querySelector('#info');
+        const form = document.querySelector('#form');
+        const urlInput = document.querySelector('#url');
+        const modeDropdown = document.querySelector('#mode');
+
+        const query = new URLSearchParams(window.location.search);
+        const urlRaw = query.get('url');
+        if (urlRaw) {
+            const url = atob(urlRaw);
+            window.open(url);
+        }
+
+        const lastMode = localStorage.getItem('mode');
+        if (lastMode) {
+            modeDropdown.value = lastMode;
+        }
+
+        let lastTimeout;
+        function showInfo(message) {
+            infoBox.innerText = message;
+            clearTimeout(lastTimeout);
+            lastTimeout = setTimeout(() => {
+                infoBox.innerText = '';
+            }, 3000);
+        }
+
+        function submit(e) {
+            e.preventDefault();
+            const url = urlInput.value;
+            const mode = modeDropdown.value;
+
+            if (!url || !url.startsWith('anytype://')) {
+                showInfo('Invalid anytype URL!');
+                return;
+            }
+
+            const urlEncoded = btoa(url);
+            let result = `${location.protocol}//${location.host}${location.pathname}?url=${urlEncoded}`;
+
+            localStorage.setItem('mode', mode);
+            if (mode === 'markdown') {
+                result = `[Anytype](${result})`;
+            }
+
+            navigator.clipboard.writeText(result);
+            showInfo('Copied to clipboard!');
+        }
+
+        form.addEventListener('submit', submit);
+    </script>
+</body>
+</html>
