@@ -183,7 +183,7 @@
             let result = `${location.protocol}//${location.host}${location.pathname}?url=${urlEncoded}`;
 
             if (mode === 'markdown') {
-                result = `[Anytype](${result})`;
+                result = `[${titleInput.value}](${result})`;
             }
 
             navigator.clipboard.writeText(result);
