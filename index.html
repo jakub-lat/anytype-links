@@ -145,7 +145,7 @@
 
             form.style.display = 'none';
 
-            const url = atob(urlRaw);
+            const url = decodeURIComponent(urlRaw);
             const newWindow = window.open(url);
 
             if (isWindowClosed(newWindow)) { 
@@ -179,7 +179,7 @@
                 return;
             }
 
-            const urlEncoded = btoa(url);
+            const urlEncoded = encodeURIComponent(url);
             let result = `${location.protocol}//${location.host}${location.pathname}?url=${urlEncoded}`;
 
             if (mode === 'markdown') {
