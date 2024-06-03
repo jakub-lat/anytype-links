@@ -10,7 +10,7 @@ if (-not (Test-Path node_modules)) {
     npm install
 }
 
-npm run patch -- $args[0] | Tee-Object -Variable out
+npm run patch -- @args | Tee-Object -Variable out
 
 Write-Host "Starting Anytype..."
 
