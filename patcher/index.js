@@ -6,7 +6,6 @@ const path = require('path');
 const exec = util.promisify(childProcess.exec);
 const { program } = require('commander');
 
-
 const UNPACKED_DIR = 'temp';
 const URL_PREFIX = 'https://anytype-links.vercel.app?url=';
 
@@ -70,7 +69,7 @@ async function patchMain(dir) {
 }
 
 async function patch(dir, keepTemp) {
-    console.log(`Using directory ${dir}`);
+    console.log(`Using directory ${path.resolve(dir, '..')}`);
 
     console.log('Killing Anytype process...')
     await killProcess('anytype');
@@ -98,7 +97,7 @@ async function patch(dir, keepTemp) {
         await fs.rm(path.join(dir, UNPACKED_DIR), { recursive: true, force: true });
     }
 
-    console.log('Done');
+    console.log('Patch done - "npm run unpatch" to revert');
 }
 
 const defaultDir = () => process.env.USERPROFILE + '\\AppData\\Local\\Programs\\anytype';
@@ -106,6 +105,12 @@ const defaultDir = () => process.env.USERPROFILE + '\\AppData\\Local\\Programs\\
 function resolveDir(dir) {
     dir ||= defaultDir();
     dir = path.join(dir, 'resources');
+
+    // check if dir exists, if not throw error (use fs promises API)
+    fs.access(dir).catch(() => {
+        throw new Error(`Directory ${dir} does not exist! Use --dir to specify the correct Anytype directory.`);
+    });
+
     return dir;
 }
 
