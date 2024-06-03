@@ -16,4 +16,6 @@ Write-Host "Starting Anytype..."
 
 $dir = $out | Select-String -Pattern "Using directory (.+)" | ForEach-Object { $_.Matches.Groups[1].Value }
 
-Start-Process "$dir\Anytype.exe" &
+(Start-Process "$dir\Anytype.exe" &) | Out-Null
+
+Write-Host "Done!"
