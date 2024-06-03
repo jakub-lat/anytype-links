@@ -105,7 +105,6 @@ function resolveDir(dir) {
     dir ||= defaultDir();
     dir = path.join(dir, 'resources');
 
-    // check if dir exists, if not throw error (use fs promises API)
     fs.access(dir).catch(() => {
         throw new Error(`Directory ${dir} does not exist! Use --dir to specify the correct Anytype directory.`);
     });
