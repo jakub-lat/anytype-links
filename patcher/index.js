@@ -40,9 +40,9 @@ async function patchMain(dir) {
     content = 'console.log("Hello patched");\n' + content;
 
     content = content.replace(/(let pageLink.+)$/gm, `$1
-  let pageLinkUrl = { id: 'pageLinkUrl', icon: 'link', name: 'Copy URL' };
-  let pageLinkUrlMarkdown = { id: 'pageLinkUrlMarkdown', icon: 'link', name: 'Copy URL (Markdown)' };
-  `)
+        let pageLinkUrl = { id: 'pageLinkUrl', icon: 'link', name: 'Copy URL' };
+        let pageLinkUrlMarkdown = { id: 'pageLinkUrlMarkdown', icon: 'link', name: 'Copy URL (Markdown)' };
+    `);
 
     content = content.replace(/pageLink,/gm, 'pageLink, pageLinkUrl, pageLinkUrlMarkdown, ');
 
@@ -62,7 +62,7 @@ async function patchMain(dir) {
             ${utilCommonVar}.clipboardCopy({ text: '[' + ${objectVar}.name + '](${URL_PREFIX}' + encodeURIComponent(anytypeUrl) + ')' });
             break;
         }
-        $1`);
+    $1`);
 
     await fs.writeFile(filePath, content);
 }
