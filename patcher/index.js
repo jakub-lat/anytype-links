@@ -46,20 +46,20 @@ async function patchMain(dir) {
 
     content = content.replace(/pageLink,/gm, 'pageLink, pageLinkUrl, pageLinkUrlMarkdown, ');
 
-    // util_common.clipboardCopy({ text: object_Url.protocol + util_object.universalRoute(object) });
-    // ^^^^^^^^^^^                       ^^^^^^^^^^            ^^^^^^^^^^^                ^^^^^^
-    const regex = /([\w_]+)\.clipboardCopy\(\{\s*text:\s*([\w_]+)\.protocol\s*\+\s*([\w_]+)\.universalRoute\(([\w_]+)\)/gm;
-    const [_, utilCommonVar, urlVar, utilObjectVar, objectVar] = regex.exec(content);
+    // util_common.clipboardCopy({ text: `${constant.protocol}://${util_object.universalRoute(object)}` });
+    // ^^^^^^^^^^^                          ^^^^^^^^               ^^^^^^^^^^^                ^^^^^^
+    const regex = /([\w_]+)\.clipboardCopy\(\{\s*text:\s*`\${([\w_]+)\.protocol}:\/\/\${([\w_]+)\.universalRoute\(([\w_]+)\)/;
+    const [_, utilCommonVar, constantVar, utilObjectVar, objectVar] = regex.exec(content);
 
     content = content.replace(/(case 'pageLink':)/gm, `
         case 'pageLinkUrl': {
-            const anytypeUrl = ${urlVar}.protocol + ${utilObjectVar}.universalRoute(${objectVar});
+            const anytypeUrl = ${constantVar}.protocol + '://' + ${utilObjectVar}.universalRoute(${objectVar});
             ${utilCommonVar}.clipboardCopy({ text: '${URL_PREFIX}' + encodeURIComponent(anytypeUrl) });
             break;
         }
         case 'pageLinkUrlMarkdown': {
-            const anytypeUrl = ${urlVar}.protocol + ${utilObjectVar}.universalRoute(${objectVar});
-            ${utilCommonVar}.clipboardCopy({ text: '[' + ${objectVar}.name + '](${URL_PREFIX}' + encodeURIComponent(anytypeUrl) + ')' });
+            const anytypeUrl = ${constantVar}.protocol + '://' + ${utilObjectVar}.universalRoute(${objectVar});
+            ${utilCommonVar}.clipboardCopy({ text: '[' + ${objectVar}.name + ' - Anytype](${URL_PREFIX}' + encodeURIComponent(anytypeUrl) + ')' });
             break;
         }
     $1`);
