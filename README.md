@@ -4,7 +4,7 @@ Allow sharing Anytype objects via HTTP URLs
 
 ## [web](./web)
 
-A simple URL shortener for anytype:// protocol
+A simple URL ~~shortener~~ expander for anytype:// protocol
 
 Demo: https://anytype-links.vercel.app
 
