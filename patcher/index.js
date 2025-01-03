@@ -36,35 +36,43 @@ async function unpatch(dir) {
 async function patchMain(dir) {
     const filePath = path.join(dir, UNPACKED_DIR, 'dist/js/main.js');
     let content = await fs.readFile(filePath, 'utf8');
+    console.log('File length: ', content.length);
 
     content = 'console.log("Hello patched");\n' + content;
 
-    content = content.replace(/(let pageLink.+)$/gm, `$1
-        let pageLinkUrl = { id: 'pageLinkUrl', icon: 'link', name: 'Copy URL' };
-        let pageLinkUrlMarkdown = { id: 'pageLinkUrlMarkdown', icon: 'link', name: 'Copy URL (Markdown)' };
+    content = content.replace(/(var pageLink.+)$/gm, `
+        var pageLinkUrl = { id: 'pageLinkUrl', icon: 'link', name: 'Copy URL' };
+        var pageLinkUrlMarkdown = { id: 'pageLinkUrlMarkdown', icon: 'link', name: 'Copy URL (Markdown)' };
+        $1
     `);
 
     content = content.replace(/pageLink,/gm, 'pageLink, pageLinkUrl, pageLinkUrlMarkdown, ');
 
     // util_common.clipboardCopy({ text: `${constant.protocol}://${util_object.universalRoute(object)}` });
     // ^^^^^^^^^^^                          ^^^^^^^^               ^^^^^^^^^^^                ^^^^^^
-    const regex = /([\w_]+)\.clipboardCopy\(\{\s*text:\s*`\${([\w_]+)\.protocol}:\/\/\${([\w_]+)\.universalRoute\(([\w_]+)\)/;
-    const [_, utilCommonVar, constantVar, utilObjectVar, objectVar] = regex.exec(content);
+    // const regex = /([\w_]+)\.clipboardCopy\(\{\s*text:\s*`\${([\w_]+)\.protocol}:\/\/\${([\w_]+)\.universalRoute\(([\w_]+)\)/;
+    // const [_, utilCommonVar, constantVar, utilObjectVar, objectVar] = regex.exec(content);
+
+    const linkLine = /^.+var link = `.+$/gm.exec(content)[0];
+    const copyLine = /^.+\.copyToast.+commonLink.+link.+$/gm.exec(content)[0];
 
     content = content.replace(/(case 'pageLink':)/gm, `
         case 'pageLinkUrl': {
-            const anytypeUrl = ${constantVar}.protocol + '://' + ${utilObjectVar}.universalRoute(${objectVar});
-            ${utilCommonVar}.clipboardCopy({ text: '${URL_PREFIX}' + encodeURIComponent(anytypeUrl) });
+            ${linkLine};
+            link = '${URL_PREFIX}' + encodeURIComponent(link);
+            ${copyLine};
             break;
         }
         case 'pageLinkUrlMarkdown': {
-            const anytypeUrl = ${constantVar}.protocol + '://' + ${utilObjectVar}.universalRoute(${objectVar});
-            ${utilCommonVar}.clipboardCopy({ text: '[' + ${objectVar}.name + ' - Anytype](${URL_PREFIX}' + encodeURIComponent(anytypeUrl) + ')' });
+            ${linkLine};
+            link = '[' + object.name + ' - Anytype](${URL_PREFIX}' + encodeURIComponent(link) + ')';
+            ${copyLine};
             break;
         }
     $1`);
 
     await fs.writeFile(filePath, content);
+    console.log('Wrote to', filePath)
 }
 
 async function patch(dir, keepTemp) {
@@ -79,24 +87,32 @@ async function patch(dir, keepTemp) {
         await unpatch(dir);
     }
 
-    console.log('Patching...');
+    console.log('Extracting...');
 
     await fs.copyFile(path.join(dir, 'app.asar'), path.join(dir, 'app.asar.bak'));
     await asar.extractAll(path.join(dir, 'app.asar'), path.join(dir, UNPACKED_DIR));
+    
+    try {
+        console.log('Patching...');
+        await patchMain(dir);
 
-    await patchMain(dir);
+        console.log('Packing...');
+        await asar.createPackageWithOptions(path.join(dir, UNPACKED_DIR), path.join(dir, 'app.asar'), {
+            unpack: '**/dist/*.exe'
+        });
 
-    await asar.createPackageWithOptions(path.join(dir, UNPACKED_DIR), path.join(dir, 'app.asar'), {
-        unpack: '**/dist/anytypeHelper.exe'
-    });
+        await fs.writeFile(path.join(dir, 'patched.txt'), 'ok');
 
-    await fs.writeFile(path.join(dir, 'patched.txt'), 'ok');
+        if (!keepTemp) {
+            await fs.rm(path.join(dir, UNPACKED_DIR), { recursive: true, force: true });
+        }    
 
-    if (!keepTemp) {
-        await fs.rm(path.join(dir, UNPACKED_DIR), { recursive: true, force: true });
+        console.log('Patch done - "npm run unpatch" to revert');
+    } catch(e) {
+        console.error(e);
+        console.log('Error - reverting');
+        await unpatch(dir);
     }
-
-    console.log('Patch done - "npm run unpatch" to revert');
 }
 
 const defaultDir = () => process.env.USERPROFILE + '\\AppData\\Local\\Programs\\anytype';
