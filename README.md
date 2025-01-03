@@ -1,10 +1,10 @@
 # Anytype links
 
-Allow sharing Anytype objects via HTTP URLs
+Allow sharing [Anytype](https://anytype.io) objects via HTTP URLs.
 
 ## [web](./web)
 
-A simple URL ~~shortener~~ expander for anytype:// protocol
+A simple URL ~~shortener~~ expander for the anytype:// protocol
 
 Demo: https://anytype-links.vercel.app
 
